@@ -7,14 +7,17 @@ import './row.css';
 class Row extends Component {
   constructor (props) {
     super(props);
+    
+    this.email = React.createRef();
+    this.copy = React.createRef();
 
     this.copyAction = null;
   }
 
   componentDidMount() {
-    this.copyAction = new Clipboard(this.copy, {
+    this.copyAction = new Clipboard(this.copy.current, {
       text: () => {
-        return this.email.innerText;
+        return this.email.current.innerText;
       }
     });
   }
@@ -34,9 +37,9 @@ class Row extends Component {
         <td>{this.props.mp.electorate}</td>
         <td>
           <a href={'mailto:' + this.props.mp.email}>
-            <span ref={(ref) => { this.email = ref; }}>{this.props.mp.email}</span>
+            <span ref={this.email}>{this.props.mp.email}</span>
           </a>
-          <button className="copybutton btn btn-default" ref={(ref) => { this.copy = ref; }}>Copy</button>
+          <button className="copybutton btn btn-default" ref={this.copy}>Copy</button>
         </td>
       </tr>
     );
