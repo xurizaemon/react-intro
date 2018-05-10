@@ -844,7 +844,7 @@ class Row extends Component {
         <td>{this.props.mp.electorate}</td>
         <td>
           <a href={'mailto:' + this.props.mp.email}>
-            <span ref={(ref) => { this.email = ref; }}>{this.props.mp.email}</span>
+            <span ref={this.email}>{this.props.mp.email}</span>
           </a>
         </td>
       </tr>
@@ -886,25 +886,45 @@ import Clipboard from 'clipboard';
 We want the clipboard to be hooked up to a button on the page, and that button
 on the page needs to copy the email. To be able to reach into the virtual DOM
 and attach the library, we need to pass in a reference to the element in the
-_real_ DOM. We do this using `ref`:
+_real_ DOM. We do this using `ref`, which we create in the components `constructor`
+function, and attach to our React element via the `ref` attribute:
 
 ```
-<td>
-  <a href={'mailto:' + this.props.mp.email}>
-    <span ref={(ref) => { this.email = ref; }}>{this.props.mp.email}</span>
-  </a>
-  <button className="copybutton btn btn-default" ref={(ref) => { this.copy = ref; }}>Copy</button>
-</td>
+class Row extends Component {
+  constructor (props) {
+    super(props);
+
+    this.email = React.createRef();
+    this.copy = React.createRef();
+
+    this.copyAction = null;
+  }
+
+  render () {  
+    let name = this.props.mp.name.split(',');
+    name = name.reverse().join(' ');
+
+    return (
+      <td>
+        <a href={'mailto:' + this.props.mp.email}>
+          <span ref={this.email}>{this.props.mp.email}</span>
+        </a>
+        <button className="copybutton btn btn-default" ref={this.copy}>Copy</button>
+      </td>
+    )
+  }
+}
 ```
 
 We want the clipboard to be set up when the component first loads. So we'll use
-a lifecycle event, `componentDidMount`:
+a lifecycle event, `componentDidMount`.  We access the reference to the node via
+the `current` attribute of the `ref`:
 
 ```
 componentDidMount() {
-  new Clipboard(this.copy, {
+  new Clipboard(this.copy.current, {
     text: () => {
-      return this.email.innerText;
+      return this.email.current.innerText;
     }
   });
 }
@@ -917,18 +937,21 @@ up after ourselves when the component is later unloaded:
 class Row extends Component {
   constructor (props) {
     super(props);
-    
+
+    this.email = React.createRef();
+    this.copy = React.createRef();
+
     this.copyAction = null;
   }
-  
+
   componentDidMount() {
-    this.copyAction = new Clipboard(this.copy, {
+    this.copyAction = new Clipboard(this.copy.current, {
       text: () => {
-        return this.email.innerText;
+        return this.email.current.innerText;
       }
     });
   }
-  
+
   componentWillUnmount() {
     this.copyAction.destroy();
   }
